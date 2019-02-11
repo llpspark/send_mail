@@ -1,6 +1,7 @@
 #encoding='utf-8'
 
 import os
+import time
 import xlrd
 
 from email import encoders
@@ -32,8 +33,8 @@ def _format_addr(s):
 
 '''加密发送文本邮件'''
 def sendEmail(from_addr, password, smtp_server, img_dir, file_list, log_path):
-	server = smtplib.SMTP(smtp_server,25)
-	server.starttls() # 调用starttls()方法，就创建了安全连接
+	#server = smtplib.SMTP(smtp_server,80)
+	server = smtplib.SMTP_SSL(smtp_server,465)#使用465端口
 	#server.set_debuglevel(1) # 记录详细信息
 	server.login(from_addr, password) # 登录邮箱服务器
 	
@@ -53,7 +54,7 @@ def sendEmail(from_addr, password, smtp_server, img_dir, file_list, log_path):
 				<html>
 				<body>
 					<h3 align="center">2019年春节过节费发放通知</h3>
-					<p> <div face="Verdana" align="center">某某公司（XZ）字第20190201号</div></p>
+					<p> <div face="Verdana" align="center">***公司（XZ）字第20190201号</div></p>
 					<p>您好：</p>
 					<blockquote><p>2019年春节，为答谢您对公司的辛勤付出，特为您送上节日贺礼一张，请查收！</p></blockquote>
 					
@@ -65,7 +66,7 @@ def sendEmail(from_addr, password, smtp_server, img_dir, file_list, log_path):
 					<blockquote><p>预祝您节日快乐！</p><blockquote>
 
 
-					<p align="right">某某公司文化建设委员会</p>  
+					<p align="right">***公司文化建设委员会</p>  
 					<p align="right">2019年2月1日</p> 
 
 
@@ -102,10 +103,11 @@ def sendEmail(from_addr, password, smtp_server, img_dir, file_list, log_path):
 						msg.attach(mime)
 						i = i + 1
 
-				msg['From'] = _format_addr('盛威文化建设委员会 <%s>' % from_addr)
+				msg['From'] = _format_addr('**公司文化建设委员会 <%s>' % from_addr)
 				msg['To'] = _format_addr(person_name + '<%s>' % email_add)
 				msg['Subject'] = Header('2019年春节过节费发放通知', 'utf-8').encode()
-
+				
+				#time.sleep(20)
 				server.sendmail(from_addr, [email_add], msg.as_string()) # 发送信息
 
 				log_i = str("序号："+ str(order_num) + "  姓名：" +  person_name  +  "已发送成功！")
@@ -113,6 +115,18 @@ def sendEmail(from_addr, password, smtp_server, img_dir, file_list, log_path):
 				f_w.write(log_i)
 				f_w.write('\r\n')
 				
+			except smtplib.SMTPConnectError as e:
+				print('邮件发送失败，连接失败:', e.smtp_code, e.smtp_error)
+			except smtplib.SMTPAuthenticationError as e:
+				print('邮件发送失败，认证错误:', e.smtp_code, e.smtp_error)
+			except smtplib.SMTPSenderRefused as e:
+				print('邮件发送失败，发件人被拒绝:', e.smtp_code, e.smtp_error)
+			except smtplib.SMTPRecipientsRefused as e:
+				print('邮件发送失败，收件人被拒绝:', e.smtp_code, e.smtp_error)
+			except smtplib.SMTPDataError as e:
+				print('邮件发送失败，数据接收拒绝:', e.smtp_code, e.smtp_error)
+			except smtplib.SMTPException as e:
+				print('邮件发送失败, ', e.message)
 			except Exception as e:
 				print("发送失败" + e)
 	server.quit()
@@ -126,9 +140,9 @@ if __name__ == '__main__':
     file_path = root_dir + "\\zyy.xlsx"
     log_path = root_dir + "\\log_file.txt"
     img_dir = root_dir + "\\imgs\\" 
-    from_addr = '***@eyecool.cn'   # 邮箱登录用户名
-    password  = '******'           # 登录密码
-    smtp_server='smtp.mxhichina.com'     # 服务器地址，默认端口号25
+    from_addr = '***@***.cn'   # 邮箱登录用户名
+    password  = '***'           # 登录密码
+    smtp_server='smtp.mxhichina.com'     # 阿里服务器地址，默认端口号25
 
     file_list = read_file(file_path)
     sendEmail(from_addr, password, smtp_server, img_dir, file_list, log_path)
